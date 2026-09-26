@@ -1,12 +1,138 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的网页</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkBuddy 项目发布</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f6f8; color: #1f2328;
+  }
+  header { max-width: 760px; margin: 0 auto 20px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .sub { color: #656d76; font-size: 13px; }
+  #app { max-width: 760px; margin: 0 auto; }
+  .card {
+    background: #fff; border: 1px solid #e1e4e8; border-radius: 10px;
+    padding: 16px 18px; margin-bottom: 16px;
+  }
+  .card h2 { font-size: 17px; margin: 0 0 12px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { padding: 10px 0; border-top: 1px solid #eef0f2; }
+  li:first-child { border-top: none; }
+  .ver { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .tag {
+    font-family: ui-monospace, Consolas, monospace; font-size: 13px;
+    background: #eef2ff; color: #3b4cca; padding: 2px 8px; border-radius: 6px;
+  }
+  .time { color: #656d76; font-size: 12px; }
+  .dl { margin-top: 6px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; }
+  .dl a { color: #0969da; text-decoration: none; }
+  .dl a:hover { text-decoration: underline; }
+  .none { color: #999; }
+  .more { color: #656d76 !important; }
+  .empty, .err { text-align: center; color: #656d76; padding: 40px 0; font-size: 14px; }
+  .err { color: #c0392b; }
+  .foot { text-align: center; color: #8b949e; font-size: 12px; margin: 24px 0; }
+</style>
 </head>
 <body>
-  <h1>Hello GitHub Pages</h1>
-  <p>这是我的第一个网页。</p>
+
+<header>
+  <h1>WorkBuddy 项目发布</h1>
+  <div class="sub">自动读取 GitHub Release，按项目分组展示</div>
+</header>
+
+<main id="app">加载中…</main>
+<div class="foot" id="foot"></div>
+
+<script>
+const REPO = 'leyonwaiter/workbuddy2026';
+const API  = 'https://api.github.com/repos/' + REPO + '/releases?per_page=100';
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// tag 格式：<项目名>-v<版本号>，项目名里可能有点号，所以从最后一个 -v 处切
+function parseTag(tag){
+  const i = tag.lastIndexOf('-v');
+  if (i === -1) return { project: tag, version: tag };
+  return { project: tag.slice(0, i), version: tag.slice(i + 2) };
+}
+
+function fmtDate(s){
+  const d = new Date(s);
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate())
+       + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
+async function load(){
+  const app = document.getElementById('app');
+  const foot = document.getElementById('foot');
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error('API 返回 ' + res.status);
+    const releases = await res.json();
+
+    if (!releases.length){
+      app.innerHTML = '<p class="empty">还没有任何发布。</p>';
+      foot.textContent = '';
+      return;
+    }
+
+    // 按项目名分组
+    const groups = new Map();
+    for (const r of releases){
+      const { project, version } = parseTag(r.tag_name);
+      if (!groups.has(project)) groups.set(project, []);
+      groups.get(project).push({ ...r, _version: version });
+    }
+
+    // 组内按发布时间倒序
+    for (const arr of groups.values()){
+      arr.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+    }
+
+    // 项目之间按各自最新发布时间倒序
+    const sorted = [...groups.entries()].sort((a, b) =>
+      new Date(b[1][0].published_at) - new Date(a[1][0].published_at)
+    );
+
+    app.innerHTML = sorted.map(([name, list]) => `
+      <section class="card">
+        <h2>${esc(name)}</h2>
+        <ul>
+          ${list.map(r => `
+            <li>
+              <div class="ver">
+                <span class="tag">${esc(r._version)}</span>
+                <span class="time">${fmtDate(r.published_at)}</span>
+              </div>
+              <div class="dl">
+                ${r.assets.length
+                  ? r.assets.map(a =>
+                      `<a href="${a.browser_download_url}" target="_blank" rel="noopener">${esc(a.name)}</a>`
+                    ).join('')
+                  : '<span class="none">无附件</span>'}
+                <a class="more" href="${r.html_url}" target="_blank" rel="noopener">详情</a>
+              </div>
+            </li>`).join('')}
+        </ul>
+      </section>`).join('');
+
+    foot.textContent = '共 ' + releases.length + ' 个版本 · 更新于 ' + fmtDate(new Date().toISOString());
+  } catch (e){
+    app.innerHTML = '<p class="err">读取失败：' + esc(e.message)
+      + '<br>可能是仓库不是 Public，或 API 限流，稍后再试。</p>';
+  }
+}
+
+load();
+</script>
 </body>
 </html>
