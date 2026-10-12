@@ -82,6 +82,8 @@ gh release view 项目名-v2026.10.08.xxxx --repo leyonwaiter/workbuddy2026 --js
 |---|---|---|
 | jieqi | `jieqi-v2026.10.08.2206` | 廿四节气微信推送流水线（scripts/docs/4篇稿，密钥已剔） |
 | publish | `publish-v2026.10.08.2220` | 发布为应用使用说明 |
+| japanese-imageguide | `japanese-imageguide-v2026.10.08.224915` | 日语学习文章配图方案交接包（SKILL 复刻用，零密钥） |
+| downloadpage | `downloadpage-v2026.10.12.1708` | 浏览器原生下载改进版 · 成果展示/公网交付工具 |
 
 ---
 
