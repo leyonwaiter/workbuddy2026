@@ -84,6 +84,9 @@ gh release view 项目名-v2026.10.08.xxxx --repo leyonwaiter/workbuddy2026 --js
 | publish | `publish-v2026.10.08.2220` | 发布为应用使用说明 |
 | japanese-imageguide | `japanese-imageguide-v2026.10.08.224915` | 日语学习文章配图方案交接包（SKILL 复刻用，零密钥） |
 | downloadpage | `downloadpage-v2026.10.12.1708` | 浏览器原生下载改进版 · 成果展示/公网交付工具 |
+| ashare-data-pipeline | `ashare-data-pipeline-v2026.10.15.0929` | A股数据库构建：东财接口抓前复权/不复权日线+分红送配全量（3脚本+clean.sql+README，从零可复现） |
+| roll3y-screen | `roll3y-screen-v2026.10.15.0929` | 三年回滚选股：任意3年窗口涨幅筛选出14只（screen_v1.py+结果CSV+README） |
+| dividend-research | `dividend-research-v2026.10.15.0929` | 分红研究三件套：连续分红榜/平均股息率榜/分红增长榜/三合一交集榜51只（6脚本+4结果+详情JSON，与线上零差异） |
 
 ---
 
